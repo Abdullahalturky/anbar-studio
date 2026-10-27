@@ -860,7 +860,7 @@ function drawBrief(x,H){const R=H>1500,Y=v=>v*H/1920,k=R?1:.8;
   if(mark.naturalWidth){const mh=cr*.95,mw=mh*mark.naturalWidth/mark.naturalHeight;x.drawImage(tint(mark,"#fff"),ccx-mw/2-1,ccy-mh/2,mw,mh)}
   // title: two kashida-justified lines across the full measure
   const L=lines().slice(0,2);let fs=(R?92:80);const left=80,right=W-90,tw=right-left;x.font=F(900,fs);let wd=Math.max(...L.map(l=>x.measureText(l).width));if(wd>tw){fs=Math.floor(fs*tw/wd);x.font=F(900,fs)}
-  x.fillStyle="#173B30";x.textAlign="center";x.textBaseline="middle";x.direction="rtl";const ty=(R?615:345)-(L.length>1?0:fs*.55);L.forEach((l,i)=>boldFill(x,kashida(x,l,tw,9),(left+right)/2,ty+i*fs*1.12,fs,.03));
+  x.fillStyle="#173B30";x.textAlign="center";x.textBaseline="middle";x.direction="rtl";const ty=(R?615:345)-(L.length>1?0:fs*.55);L.forEach((l,i)=>boldFill(x,L.length>1?kashida(x,l,tw,9):l,(left+right)/2,ty+i*fs*1.12,fs,.03));
   // cards
   const cw=360*k,ch=576*k,ccX=W/2,ctop=R?880:540,sw=290*k,sh=440*k,stop=ctop+(ch-sh)*.48-ch*.05;
   const sideL=[ccX-cw/2-sw*.91,stop],sideR=[ccX+cw/2+sw*.91-sw,stop];
