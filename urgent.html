@@ -764,27 +764,50 @@ function whiteBoxes(x,H,top){const L=lines();let fs=H>1500?80:70;const bw=W*.80,
   let widest=Math.max(...L.map(l=>x.measureText(l).width));if(widest>inner){fs=Math.floor(fs*inner/widest);x.font=F(900,fs)}let y=top;
   L.forEach(l=>{x.save();x.shadowColor="rgba(0,0,0,.25)";x.shadowBlur=16;x.shadowOffsetY=5;rr(x,W/2-bw/2,y,bw,bh,7);x.fillStyle="#fff";x.fill();x.restore();
     x.fillStyle="#E3152F";x.textAlign="center";x.textBaseline="middle";x.direction="rtl";x.font=F(900,fs);boldFill(x,kashida(x,l,inner),W/2,y+bh/2+fs*.06,fs);y+=bh+gap});return y}
+
+// ---- "الموجز الإخباري" cover: light grey ground, kashida title, three stacked photo cards ----
+function rrf(x,a,b,w,h,r){rr(x,a,b,w,h,r)}
+function photoCard(x,el,bx,by,bw,bh,r,fadeFrom,fadeA){x.save();rr(x,bx,by,bw,bh,r);x.clip();x.fillStyle="#cfcac3";x.fillRect(bx,by,bw,bh);cover(x,el,bx,by,bw,bh);
+  const t=x.createLinearGradient(0,by,0,by+bh*.35);t.addColorStop(0,"rgba(255,255,255,.18)");t.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=t;x.fillRect(bx,by,bw,bh*.35);
+  const g=x.createLinearGradient(0,by+bh*fadeFrom,0,by+bh);g.addColorStop(0,"rgba(232,52,60,0)");g.addColorStop(.55,`rgba(232,52,60,${fadeA*.72})`);g.addColorStop(1,`rgba(229,48,56,${fadeA})`);x.fillStyle=g;x.fillRect(bx,by+bh*fadeFrom,bw,bh*(1-fadeFrom)+1);x.restore()}
+function sparkle(x,cx,cy,r){x.beginPath();x.moveTo(cx,cy-r);x.quadraticCurveTo(cx+r*.12,cy-r*.12,cx+r,cy);x.quadraticCurveTo(cx+r*.12,cy+r*.12,cx,cy+r);x.quadraticCurveTo(cx-r*.12,cy+r*.12,cx-r,cy);x.quadraticCurveTo(cx-r*.12,cy-r*.12,cx,cy-r);x.fill()}
+function drawBrief(x,H){const R=H>1500,Y=v=>v*H/1920,k=R?1:.8;
+  // ground + fine dot grid + soft halftone blobs
+  x.fillStyle="#EDEBE6";x.fillRect(0,0,W,H);const rg=x.createRadialGradient(W/2,H*.45,50,W/2,H*.5,H*.75);rg.addColorStop(0,"rgba(255,255,255,.35)");rg.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=rg;x.fillRect(0,0,W,H);
+  x.fillStyle="rgba(28,43,38,.055)";for(let yy=14;yy<H;yy+=28)for(let xx=14;xx<W;xx+=28){x.beginPath();x.arc(xx,yy,1.3,0,7);x.fill()}
+  const zones=[[.42,1,0,.15],[.83,1,.41,.53],[0,.12,.46,.62],[.38,1,.86,1],[0,.25,.03,.09]];x.save();x.filter="blur(2.5px)";x.fillStyle="rgba(28,43,38,.045)";
+  for(let yy=18;yy<H;yy+=37)for(let xx=18;xx<W;xx+=37){const u=xx/W,v=yy/H;if(!zones.some(z=>u>=z[0]&&u<=z[1]&&v>=z[2]&&v<=z[3]))continue;const h=(Math.sin(xx*12.9898+yy*78.233)*43758.5453)%1;if(Math.abs(h)<.68)continue;x.beginPath();x.arc(xx,yy,14,0,7);x.fill()}x.restore();
+  // logo (dark) + red circle with the white mark
+  const ly=R?345:96;if(logo.naturalWidth){const lw=150*k,lh=lw*logo.naturalHeight/logo.naturalWidth;x.drawImage(tint(logo,INK),84,ly,lw,lh)}
+  const cr=50*k,ccx=W-84-cr,ccy=ly+cr+4;x.save();x.shadowColor="rgba(200,20,40,.25)";x.shadowBlur=14;x.fillStyle="#E8363E";x.beginPath();x.arc(ccx,ccy,cr,0,7);x.fill();x.restore();
+  if(mark.naturalWidth){const mh=cr*.95,mw=mh*mark.naturalWidth/mark.naturalHeight;x.drawImage(tint(mark,"#fff"),ccx-mw/2-1,ccy-mh/2,mw,mh)}
+  // title: two kashida-justified lines across the full measure
+  const L=lines().slice(0,2);let fs=(R?92:80);const left=80,right=W-90,tw=right-left;x.font=F(900,fs);let wd=Math.max(...L.map(l=>x.measureText(l).width));if(wd>tw){fs=Math.floor(fs*tw/wd);x.font=F(900,fs)}
+  x.fillStyle="#173B30";x.textAlign="center";x.textBaseline="middle";x.direction="rtl";const ty=(R?615:345)-(L.length>1?0:fs*.55);L.forEach((l,i)=>boldFill(x,kashida(x,l,tw,9),(left+right)/2,ty+i*fs*1.12,fs,.03));
+  // cards
+  const cw=360*k,ch=576*k,ccX=W/2,ctop=R?880:540,sw=290*k,sh=440*k,stop=ctop+(ch-sh)*.48-ch*.05;
+  const sideL=[ccX-cw/2-sw*.91,stop],sideR=[ccX+cw/2+sw*.91-sw,stop];
+  const shadowed=f=>{x.save();x.shadowColor="rgba(40,30,25,.22)";x.shadowBlur=28;x.shadowOffsetY=10;f();x.restore()};
+  [[picks[2],sideL],[picks[1],sideR]].forEach(([p,[sx,sy]])=>{shadowed(()=>{rr(x,sx,sy,sw,sh,22*k);x.fillStyle="#d9d3cc";x.fill()});photoCard(x,p&&p.el,sx,sy,sw,sh,22*k,.5,.92)});
+  // ring text peeking over the centre card's top-right corner
+  x.save();x.fillStyle="rgba(28,43,38,.85)";x.font=F(500,12*k,"AP Readex");x.textAlign="center";x.textBaseline="middle";x.direction="ltr";
+  const rcx=ccX+cw/2-28*k,rcy=ctop+40*k,rad=82*k,txt="ALANBARPOST ✦ ALANBARPOST ✦ ";let ang=-Math.PI*.98;for(const c of txt){x.save();x.translate(rcx+Math.cos(ang)*rad,rcy+Math.sin(ang)*rad);x.rotate(ang+Math.PI/2);x.fillText(c,0,0);x.restore();ang+=10.5*k/rad;if(ang>Math.PI*.12)break}x.restore();
+  shadowed(()=>{rr(x,ccX-cw/2,ctop,cw,ch,24*k);x.fillStyle="#E5383F";x.fill()});photoCard(x,picks[0]&&picks[0].el,ccX-cw/2,ctop,cw,ch,24*k,.42,1);
+  // label: الموجز (red) / الإخباري (cream)
+  const lw=220*k,lh=86*k,lx=ccX-lw/2,l1=ctop+ch*.59;
+  const lf=62*k;x.save();x.shadowColor="rgba(0,0,0,.18)";x.shadowBlur=12;x.shadowOffsetY=4;rr(x,lx,l1,lw,lh,14*k);x.fillStyle="#E8283A";x.fill();rr(x,lx,l1+lh+6*k,lw,lh,14*k);x.fillStyle="#F6F0E8";x.fill();x.restore();
+  x.font=F(900,lf);x.textAlign="center";x.textBaseline="middle";x.direction="rtl";x.fillStyle="#fff";boldFill(x,"الموجـز",ccX,l1+lh/2+3,lf,.03);
+  x.fillStyle="#E8283A";boldFill(x,kashida(x,"الإخباري",lw*.76,4),ccX,l1+lh*1.5+6*k+3,lf,.03);
+  // footer: three sparkles + handle
+  const fy=R?1585:1268;x.fillStyle="#6F7D77";[0,1,2].forEach(i=>sparkle(x,100+i*36,fy,15*k));
+  x.save();x.font=F(600,28*k,"AP Readex");x.fillStyle="#1C2B26";x.textAlign="right";x.textBaseline="middle";x.direction="ltr";x.fillText("AlAnbarPost",W-84,fy+1);x.restore()}
 function draw(){const H=SIZES.find(z=>z.k===st.size).H;if(C.height!==H)C.height=H;const x=X;x.clearRect(0,0,W,H);const p0=picks[0]&&picks[0].el;
   if(st.type==="vtext"||st.type==="trend"){cover(x,p0,0,0,W,H);const g=x.createLinearGradient(0,0,0,H*.3);g.addColorStop(0,"rgba(0,0,0,.35)");g.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=g;x.fillRect(0,0,W,H*.3);
     redFade(x,H,.5);greenOverlay(x,H);topBarS(x,H,false);
     whiteBoxes(x,H,H*(H>1500?.615:.58));handleS(x,H,"rgba(255,255,255,.75)");
     if(st.type==="trend"&&String(st.tag||"").trim()){x.save();x.font=F(900,H>1500?54:46);x.fillStyle="#fff";x.textAlign="right";x.textBaseline="middle";x.direction="rtl";x.shadowColor="rgba(0,0,0,.35)";x.shadowBlur=10;
       boldFill(x,kashida(x,st.tag.trim(),x.measureText(st.tag.trim()).width*1.18,3),W*.9,H*(H>1500?.885:.9),H>1500?54:46,.05);x.restore()}}
-  else if(st.type==="brief"){x.fillStyle="#EFEAE2";x.fillRect(0,0,W,H);
-    x.fillStyle="rgba(18,48,42,.07)";for(let gy=0;gy<9;gy++)for(let gx2=0;gx2<9;gx2++){const px=W*.62+gx2*44,py=H*.06+gy*44;if(((gx2*7+gy*3)%5)<2)continue;x.beginPath();x.arc(px,py,5,0,7);x.fill()}
-    topBarS(x,H,true);const L=lines();let fs=H>1500?74:62;x.font=F(900,fs);const tw=W*.76;let wd=Math.max(...L.map(l=>x.measureText(l).width));if(wd>tw){fs=Math.floor(fs*tw/wd);x.font=F(900,fs)}
-    x.fillStyle="#1C2B26";x.textAlign="center";x.textBaseline="middle";x.direction="rtl";const ty=H*(H>1500?.305:.26);L.forEach((l,k)=>boldFill(x,kashida(x,l,tw),W/2,ty+k*fs*1.32,fs));
-    const cy=H*(H>1500?.635:.64),cw=W*.335,ch=H>1500?H*.33:H*.36,sw=W*.27,sh=ch*.78;
-    const side=(el,cx)=>{x.save();x.shadowColor="rgba(0,0,0,.18)";x.shadowBlur=20;x.shadowOffsetY=8;x.fillStyle="#ddd";x.fillRect(cx-sw/2,cy-sh/2,sw,sh);x.shadowColor="transparent";cover(x,el,cx-sw/2,cy-sh/2,sw,sh);x.save();x.beginPath();x.rect(cx-sw/2,cy-sh/2,sw,sh);x.clip();x.translate(cx-sw/2,cy-sh/2);x.scale(sw/W,sh/H);greenOverlay(x,H);x.restore();x.restore()};
-    side(picks[2]&&picks[2].el,W/2-cw/2-sw/2+W*.07);side(picks[1]&&picks[1].el,W/2+cw/2+sw/2-W*.07);
-    const cx0=W/2-cw/2,cy0=cy-ch/2;x.save();x.shadowColor="rgba(0,0,0,.28)";x.shadowBlur=26;x.shadowOffsetY=10;x.fillStyle="#E31B30";x.fillRect(cx0,cy0,cw,ch);x.restore();
-    const ph=ch*.74;cover(x,p0,cx0,cy0,cw,ph);x.save();x.beginPath();x.rect(cx0,cy0,cw,ph);x.clip();x.translate(cx0,cy0);x.scale(cw/W,ph/H);greenOverlay(x,H);x.restore();
-    // dotted ring arc at the card's top-right
-    x.save();x.fillStyle="rgba(18,48,42,.35)";const rcx=cx0+cw,rcy=cy0,rr0=W*.12;for(let k=0;k<26;k++){const a=-Math.PI*.95+k*(Math.PI*.9/25);x.beginPath();x.arc(rcx+Math.cos(a)*rr0,rcy+Math.sin(a)*rr0,k%5?2.2:3.6,0,7);x.fill()}x.restore();
-    x.save();const lf=H>1500?50:44;x.font=F(900,lf);const t1="الموجز",t2="الإخباري";const lw=cw*.78,lh=lf*1.45,lx=W/2-lw/2-cw*.04,ly=cy0+ph-lh*.55;
-    x.fillStyle="#E31B30";x.fillRect(lx,ly,lw,lh);x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.direction="rtl";boldFill(x,kashida(x,t1,lw*.8),lx+lw/2,ly+lh/2+2,lf,.035);
-    x.shadowColor="rgba(0,0,0,.15)";x.shadowBlur=10;x.fillStyle="#fff";x.fillRect(lx+lw*.08,ly+lh+6,lw*.84,lh);x.shadowColor="transparent";x.fillStyle="#1C2B26";boldFill(x,kashida(x,t2,lw*.7),lx+lw/2,ly+lh*1.5+8,lf,.035);x.restore();
-    handleS(x,H,"rgba(28,43,38,.6)")}
+  else if(st.type==="brief")drawBrief(x,H);
   else{const ph=H*(H>1500?.56:.52);x.fillStyle="#C8152B";x.fillRect(0,0,W,H);x.save();x.beginPath();x.rect(0,0,W,ph);x.clip();cover(x,p0,0,0,W,ph);
     const v=x.createRadialGradient(W/2,ph*.45,W*.2,W/2,ph*.5,W*.85);v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,"rgba(0,0,0,.45)");x.fillStyle=v;x.fillRect(0,0,W,ph);
     const g=x.createLinearGradient(0,ph*.7,0,ph);g.addColorStop(0,"rgba(200,21,43,0)");g.addColorStop(1,"rgba(200,21,43,.55)");x.fillStyle=g;x.fillRect(0,0,W,ph);x.restore();greenOverlay(x,H,ph);
@@ -804,7 +827,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")md.classList.remove(
 q("#cvGo").onclick=()=>{draw();C.toBlob(async b=>{if(!b)return;const d=new Date(),p=n=>String(n).padStart(2,"0");const name=`cover-${st.type}-${st.size}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.png`;
   if(window.anbarNative&&window.anbarNative.saveFile){const ok=await window.anbarNative.saveFile(name,new Uint8Array(await b.arrayBuffer()));if(ok&&window.toast)window.toast("تم حفظ الغلاف");return}
   const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);if(window.toast)window.toast("تم تنزيل الغلاف")},"image/png")};
-window.__cover={open:open_,draw,st};
+window.__cover={open:open_,draw,st,setPicks:a=>{picks=a;draw()}};
 })();</script>
 <script>/* ===== مساعد الصياغة الذكية — Claude / ChatGPT ===== */
 (function(){
